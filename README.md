@@ -1,6 +1,6 @@
 # 图夹工具（Tujia Tool）
 
-> ⬇️ **下载发布版本（Windows 桌面端 / 网页版 / Android）请前往：** 👉 [📦 releases 发布文件](releases/)
+> ⬇️ **下载发布版本（Windows 桌面端 / 网页版 / Android）请前往：** 👉 [📦 发行版 发布文件]((https://github.com/MadLife77/tujiagongju/releases/tag/v2.4))
 >
 > **提示**：`releases/` 目录内含 `图夹工具.exe`（Windows 安装包）、`图夹工具.html`（网页版单文件）、`图夹工具.apk`（安卓安装包），按你的设备选择对应文件下载即可。
 
