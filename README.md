@@ -1,6 +1,6 @@
 # 图夹工具（Tujia Tool）
 
-> ⬇️ **下载发布版本（Windows 桌面端 / 网页版 / Android）请前往：** 👉 [⬇ 下载最新版 图夹工具](https://github.com/MadLife77/tujiagongju/releases/tag/v2.4.0)
+> ⬇️ **下载发布版本（Windows 桌面端 / 网页版 / Android）请前往：** 👉 [⬇ 下载最新版 图夹工具 v2.4.1](https://github.com/MadLife77/Tujia-Tool/releases/tag/v2.4.1)
 >
 > **提示**：`releases/` 目录内含 `图夹工具.exe`（Windows 安装包）、`图夹工具.html`（网页版单文件）、`图夹工具.apk`（安卓安装包），按你的设备选择对应文件下载即可。
 
@@ -12,7 +12,7 @@
 
 - 永久域名：https://tj.qdqqd.com
 - 使用指南 / 教学视频：https://tj.qdqqd.com/help
-- 软件版本：系统公告 v2.4
+- 软件版本：v2.4.1
 - 软件由 **Github 作者 MadLife77** 整合生成
 
 ## ✨ 核心功能
@@ -53,7 +53,7 @@
 - **网页版 / 核心逻辑**：原生 HTML + CSS + JavaScript（Web Worker 并行解密）。
 - **Windows 桌面端**：C 语言 + Win32 + WebView2（COM 接口）封装，资源内嵌，PE 子系统为 GUI（无黑窗）。
 - **Android 端**：原生 WebView + `onShowFileChooser` 文件选择。
-- 三大端均内置“系统公告 v2.4”与作者水印（Github 作者 MadLife77 整合生成）。
+- 三大端均内置“系统公告 v2.4.1”与作者水印（Github 作者 MadLife77 整合生成）。
 
 ## 📂 仓库结构
 
