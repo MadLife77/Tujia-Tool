@@ -1,8 +1,8 @@
 # 图夹工具（Tujia Tool）
 
-> ⬇️ **下载发布版本（Windows 桌面端 / 网页版 / Android）请前往：** 👉 [⬇ 下载最新版 图夹工具 v2.4.1](https://github.com/MadLife77/Tujia-Tool/releases/tag/v2.4.1)
+> ⬇️ **下载发布版本（Windows 桌面端 / 网页版 / Android）请前往：** 👉 [⬇ 下载最新版 图夹工具 v2.4.2](https://github.com/MadLife77/Tujia-Tool/releases/tag/v2.4.2)
 >
-> **提示**：`releases/` 目录内含 `图夹工具.exe`（Windows 安装包）、`图夹工具.html`（网页版单文件）、`图夹工具.apk`（安卓安装包），按你的设备选择对应文件下载即可。
+> **提示**：升级 APK 前请先卸载旧版（详见下方安装提示）。`releases/` 目录内含 `图夹工具.exe`（Windows 安装包）、`图夹工具.html`（网页版单文件）、`图夹工具.apk`（安卓安装包），按你的设备选择对应文件下载即可。
 
 ---
 
@@ -12,7 +12,7 @@
 
 - 永久域名：https://tj.qdqqd.com
 - 使用指南 / 教学视频：https://tj.qdqqd.com/help
-- 软件版本：v2.4.1
+- 软件版本：v2.4.2
 - 软件由 **Github 作者 MadLife77** 整合生成
 
 ## ✨ 核心功能
@@ -53,23 +53,32 @@
 - **网页版 / 核心逻辑**：原生 HTML + CSS + JavaScript（Web Worker 并行解密）。
 - **Windows 桌面端**：C 语言 + Win32 + WebView2（COM 接口）封装，资源内嵌，PE 子系统为 GUI（无黑窗）。
 - **Android 端**：原生 WebView + `onShowFileChooser` 文件选择。
-- 三大端均内置“系统公告 v2.4.1”与作者水印（Github 作者 MadLife77 整合生成）。
+- 三大端均内置“系统公告 v2.4.2”与作者水印（Github 作者 MadLife77 整合生成）。
 
 ## 📂 仓库结构
 
 ```
-tujiagongju/
+Tujia-Tool/
 ├── README.md            # 本文档
 ├── releases/            # 发布版本（exe / html / apk）
 │   ├── 图夹工具.exe
 │   ├── 图夹工具.html
 │   └── 图夹工具.apk
+├── exe_src/             # Windows 桌面端源码（C + Win32 + WebView2）
+│   ├── main.c / filelist.h / app.rc / build.sh
+│   └── README.md        # 构建说明
+├── apk_src/             # Android 端源码
+│   └── MainActivity.java
 └── site/                # 网页版源码（HTML/CSS/JS 及素材）
     ├── index.html
     ├── 12.css
     ├── index.js / compat.js / covers.js / worker-manager.js / worker-shim.js / decryptWorker.js
+    ├── naming-patch.js / ui-patch.js   # 命名规则与三端 UI 功能补丁
     └── bqb/ gif/ png/ tphx/   # 素材目录
 ```
+
+> ⚠️ **安装提示（v2.4.2）**：本版本 APK 使用新的签名密钥，与旧版签名不一致，
+> 从旧版升级时请**先卸载旧版，再安装新版**；直接覆盖安装会提示「应用未安装」。
 
 ## ⚠️ 免责声明
 

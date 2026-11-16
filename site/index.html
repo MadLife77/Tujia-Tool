@@ -23,6 +23,7 @@
     <link rel="icon" href="https://file.zhuyitai.com/feedback/202610/763092b57e67627723699d33690ff1c4.svg" type="image/png">
     <link rel="apple-touch-icon" href="https://s3plus.meituan.net/opapisdk/op_ticket_885190757_1754655258542_qdqqd_a53m6v.jpg">
     <script src="./naming-patch.js"></script>
+    <script src="./ui-patch.js"></script>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -133,10 +134,10 @@
                             </div>
                             
                             <div class="format-selector" style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-                                <button type="button" class="format-btn active" data-format="gif" style="flex: 1; min-width: 80px; padding: 8px 12px; border: 2px solid var(--primary); background: var(--primary); color: white; border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                <button type="button" class="format-btn" data-format="gif" style="flex: 1; min-width: 80px; padding: 8px 12px; border: 2px solid var(--border); background: white; color: var(--dark); border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px;">
                                     <i class="fas fa-film"></i> GIF
                                 </button>
-                                <button type="button" class="format-btn" data-format="png" style="flex: 1; min-width: 80px; padding: 8px 12px; border: 2px solid var(--border); background: white; color: var(--dark); border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                <button type="button" class="format-btn active" data-format="png" style="flex: 1; min-width: 80px; padding: 8px 12px; border: 2px solid var(--primary); background: var(--primary); color: white; border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px;">
                                     <i class="fas fa-image"></i> PNG
                                 </button>
                                 <button type="button" id="customCoverBtn" style="padding: 8px 12px; border: 2px solid var(--secondary); background: var(--secondary); color: white; border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px;">
@@ -147,7 +148,7 @@
                             <div class="current-cover-info" style="background: #f8f9fe; border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 12px;">
                                 <img id="currentCoverPreview" src="" alt="当前表图" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                 <div style="flex: 1; min-width: 0;">
-                                    <div id="coverFormatInfo" style="font-weight: 500; color: var(--primary); margin-bottom: 3px;">GIF格式</div>
+                                    <div id="coverFormatInfo" style="font-weight: 500; color: var(--primary); margin-bottom: 3px;">PNG格式</div>
                                     <div id="coverSizeInfo" style="font-size: 0.85rem; color: var(--gray);">加载中...</div>
                                 </div>
                                 <button type="button" id="refreshCoverBtn" class="refresh-cover-btn" title="随机换一张表图" aria-label="随机换一张表图">
@@ -318,7 +319,7 @@
                 <p style="font-weight: 600; margin-bottom: 10px;">📹 教学视频位于“使用须知”</p>
             </div>
             <p style="font-size: 0.9em; color: #666; margin-top: 20px; padding-top: 15px; border-top: 1px dashed #eee;">
-                公告版本：v2.4.1<br>
+                公告版本：v2.4.2<br>
                 <span style="color:#999;">软件由Github作者MadLife77 整合生成</span>
             </p>
         </div>
