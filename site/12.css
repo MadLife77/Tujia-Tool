@@ -2068,3 +2068,11 @@ footer {
 .recent-covers-list.recent-covers-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0 !important; text-align: left; }
 .recent-thumb { display: block; width: 100%; height: 100%; object-fit: cover; }
 .preview-item { cursor: pointer; }
+
+/* 最近选择：缩略图下方小字后缀（作者水印: GitHub作者MadLife77） */
+.recent-cover-cell { display: flex; flex-direction: column; align-items: center;
+  width: 73.2px; cursor: pointer; }
+.recent-ext { width: 100%; margin-top: 2px; font-size: 0.7rem; line-height: 1.25;
+  color: var(--gray, #888); text-align: center; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 768px) { .recent-cover-cell { width: 55.2px; } }

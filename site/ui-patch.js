@@ -6,7 +6,9 @@
  * 3) 自定义表图「最近选择」：缓存最近 5 张，点击缩略图等价于重新选中该文件。
  * 4) 预览图尺寸由补丁 CSS 统一放大 20%（删除按钮保持 17px）。
  * 5) 算法选「图夹PRO(防查)」且自定义表图为 JPG/JPEG/WebP 时自动转 PNG，
- *    提示「表图正在转化」→「转化已完成」，并把转化结果缓存进「最近选择」。 */
+ *    提示「表图正在转化」→「转化已完成」，并把转化结果缓存进「最近选择」。
+ * 6) 「最近选择」每张缩略图下方以小字显示真实文件后缀（.jpg/.png/.gif 等），
+ *    统一小写带点，便于在启用 PRO 前直观判断格式。 */
 (function () {
   'use strict';
   /* 桥对象按次动态取，避免 addJavascriptInterface 注入时序差异 */
@@ -137,6 +139,19 @@
     container.parentNode.insertBefore(el, container.nextSibling);
     return el;
   }
+  /* 后缀标签：优先取真实文件名扩展名，缺失时按 MIME 兜底；统一小写 + 前导点 */
+  function extLabel(m) {
+    var n = String((m && m.name) || '');
+    var hit = n.match(/\.([A-Za-z0-9]+)\s*$/);
+    if (hit) return '.' + hit[1].toLowerCase();
+    var t = String((m && m.type) || '').toLowerCase();
+    var map = { 'image/jpeg': '.jpg', 'image/jpg': '.jpg', 'image/png': '.png',
+                'image/gif': '.gif', 'image/webp': '.webp', 'image/bmp': '.bmp',
+                'video/mp4': '.mp4', 'video/webm': '.webm' };
+    if (map[t]) return map[t];
+    if (t.indexOf('/') > 0) return '.' + t.split('/')[1].replace('jpeg', 'jpg');
+    return '.png';
+  }
   function renderRecent() {
     var host = recentHost(); if (!host) return;
     var list = document.getElementById('recentCoversList'); if (!list) return;
@@ -146,6 +161,8 @@
     var meta = readMeta();
     host.style.display = meta.length ? '' : 'none';
     meta.forEach(function (m) {
+      var cell = document.createElement('div');
+      cell.className = 'recent-cover-cell';
       var item = document.createElement('div');
       item.className = 'preview-item';
       item.title = m.name || '自定义表图';
@@ -158,13 +175,19 @@
       del.type = 'button'; del.className = 'delete-btn';
       del.title = '删除此缓存'; del.textContent = '×';
       item.appendChild(del);
-      list.appendChild(item);
+      cell.appendChild(item);
+      var ext = document.createElement('div');
+      ext.className = 'recent-ext';
+      ext.textContent = extLabel(m);   /* 与实际缓存文件一致的小字后缀 */
+      cell.appendChild(ext);
+      list.appendChild(cell);
       getBlob(m.id, function (blob) {
         if (!blob || !item.isConnected) return;
         var u = URL.createObjectURL(blob);
         liveUrls.push(u); media.src = u;
       });
-      item.addEventListener('click', function () { selectRecent(m); });
+      /* 事件绑定在容器上：点缩略图或后缀都能选中，删除按钮仍 stopPropagation 只删缓存 */
+      cell.addEventListener('click', function () { selectRecent(m); });
       del.addEventListener('click', function (e) {
         e.stopPropagation(); e.preventDefault();
         removeRecent(m.id);
