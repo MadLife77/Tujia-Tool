@@ -2076,3 +2076,59 @@ footer {
   color: var(--gray, #888); text-align: center; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 768px) { .recent-cover-cell { width: 55.2px; } }
+
+/* 解包结果多选 v2.4.3（作者水印: GitHub作者MadLife77） */
+.tj-bulk-bar { display: inline-flex; gap: 6px; align-items: center;
+  margin-left: 10px; margin-right: auto; }
+.tj-bulk-btn { padding: 3px 10px; font-size: 0.8rem; line-height: 1.4;
+  border-radius: 6px; border: 1px solid var(--primary);
+  background: #fff; color: var(--primary); cursor: pointer; white-space: nowrap; }
+.tj-bulk-btn:hover { background: #f2f7ff; color: var(--primary); }
+.tj-sel-count { padding: 3px 10px; font-size: 0.8rem; line-height: 1.4;
+  border-radius: 6px; border: 1px solid var(--border);
+  background: #fff; color: var(--text-secondary, #5b677d); white-space: nowrap; }
+#unpackResult .button-container { flex-wrap: nowrap !important; }
+#unpackResult .button-container > * { flex: 1 1 0% !important; min-width: 0 !important; }
+
+.tj-check-circle { width: 18px; height: 18px; flex: 0 0 18px; box-sizing: border-box;
+  border-radius: 50%; border: 2px solid #c4ccd8; background: #fff;
+  display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.tj-check-circle::after { content: ''; width: 8px; height: 4px;
+  border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translate(1px, -1px); opacity: 0; }
+.tj-select-btn.is-selected .tj-check-circle { background: #8ecb9f; border-color: #8ecb9f; }
+.tj-select-btn.is-selected .tj-check-circle::after { opacity: 1; }
+
+/* 清除浏览器默认焦点环 / 触屏点击高亮，避免与选中态高亮叠加 */
+#unpackResult .tj-select-btn,
+#unpackResult .tj-bulk-btn { outline: none !important; -webkit-tap-highlight-color: transparent; }
+#unpackResult .tj-select-btn:focus,
+#unpackResult .tj-bulk-btn:focus { outline: none !important; }
+#unpackResult .tj-select-btn:focus-visible { outline: none !important; }
+#unpackResult .tj-bulk-btn:focus-visible { outline: none !important; }
+
+/* 选中态 —— 小白色圆角按钮：淡蓝底 + 向外扩散亮蓝边框/光晕 */
+#unpackResult .tj-select-btn.is-selected {
+  background: #e6f1ff !important;
+  border-color: #a9ccff !important;
+  color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(94, 114, 228, 0.30), 0 0 0 5px rgba(94, 114, 228, 0.10) !important;
+}
+#unpackResult .tj-select-btn.is-selected:hover { background: #dbeaff !important; }
+#unpackResult .tj-select-btn:hover:not(.is-selected) {
+  background: #f2f7ff !important; color: var(--primary) !important; }
+
+/* 选中态 —— 红框整张灰色圆角卡片：与按钮同一套淡蓝底 + 外扩散亮蓝边框/光晕 */
+#unpackResult .decrypted-file-item.tj-item-selected {
+  background: #e6f1ff !important;
+  background-image: none !important;
+  box-shadow: 0 0 0 2px #a9ccff, 0 0 0 6px rgba(94, 114, 228, 0.16),
+              0 3px 10px rgba(0, 0, 0, 0.05) !important;
+}
+#unpackResult .decrypted-file-item.tj-item-selected:hover { background: #dbeaff !important; }
+
+/* 更外层结果区容器保持原样，不参与选中态高亮 */
+.tj-unpack-section, #unpackResult.result-content {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}

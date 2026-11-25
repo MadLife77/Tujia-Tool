@@ -1,4 +1,4 @@
-/* 作者水印: GitHub作者MadLife77 — v2.4.2 功能补丁（三端通用）
+/* 作者水印: GitHub作者MadLife77 — v2.4.3 功能补丁（三端通用）
  * 1) 公告「不再提醒」：APK 端改用原生 SharedPreferences 持久化（本地服务随机端口导致
  *    WebView localStorage 按 origin 隔离，每次启动都换端口 → 状态永远读不到）。
  *    HTML / EXE 端无原生桥，保持原有 localStorage 行为不变。
@@ -8,7 +8,13 @@
  * 5) 算法选「图夹PRO(防查)」且自定义表图为 JPG/JPEG/WebP 时自动转 PNG，
  *    提示「表图正在转化」→「转化已完成」，并把转化结果缓存进「最近选择」。
  * 6) 「最近选择」每张缩略图下方以小字显示真实文件后缀（.jpg/.png/.gif 等），
- *    统一小写带点，便于在启用 PRO 前直观判断格式。 */
+ *    统一小写带点，便于在启用 PRO 前直观判断格式。
+ * 7) v2.4.3 图片解包结果多选：「加载完成」旁加「全选 / 反选」，每个结果的
+ *    操作区由「下载 / 预览」两等分改为「下载 / 预览 / 选择」三等分，第三格为
+ *    圆形多选按钮；选中后圆形变浅绿底白色对勾，选择按钮与整张灰色圆角卡片
+ *    同步显示淡蓝底 + 向外扩散亮蓝边框/光晕，hover 时淡蓝加深；
+ *    「反选」右侧提示框实时显示「已选择{number}个文件」。
+ *    （本次仅 HTML 端发布，EXE / APK 端待下阶段同步） */
 (function () {
   'use strict';
   /* 桥对象按次动态取，避免 addJavascriptInterface 注入时序差异 */
@@ -356,10 +362,142 @@
     }
   }, true);
 
+  /* ========== 7. 图片解包结果多选（v2.4.3，仅新增节点，不改原有下载/预览） ========== */
+  var TJ_SEL = 'data-tj-selected';
+
+  function tjClosest(node, cls) {
+    while (node && node !== document) {
+      if (node.classList && node.classList.contains(cls)) return node;
+      node = node.parentNode;
+    }
+    return null;
+  }
+  function tjSetSelected(btn, on) {
+    btn.setAttribute(TJ_SEL, on ? '1' : '0');
+    if (on) btn.classList.add('is-selected');
+    else btn.classList.remove('is-selected');
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    /* 选中态同步作用于红框整张灰色圆角卡片；用 class 而非 :has，兼容老内核 */
+    var card = btn;
+    while (card && !(card.classList && card.classList.contains('decrypted-file-item')))
+      card = card.parentNode;
+    if (card && card.classList) {
+      if (on) card.classList.add('tj-item-selected');
+      else card.classList.remove('tj-item-selected');
+    }
+  }
+  function tjBulkButtons(info) {
+    if (!info || info.querySelector('.tj-bulk-bar')) return;
+    var bar = document.createElement('span');
+    bar.className = 'tj-bulk-bar';
+    bar.innerHTML = '<button type="button" class="tj-bulk-btn" data-tj-act="all">全选</button>' +
+                    '<button type="button" class="tj-bulk-btn" data-tj-act="invert">反选</button>' +
+                    '<span class="tj-sel-count" id="tjSelectedCount">已选择0个文件</span>';
+    var t = info.querySelector('.loading-text');
+    if (t && t.nextSibling) info.insertBefore(bar, t.nextSibling);
+    else info.appendChild(bar);
+  }
+  function tjUpdateCount() {
+    var root = document.getElementById('unpackResult');
+    var box = document.getElementById('tjSelectedCount');
+    if (!box) return;
+    var n = 0;
+    if (root) {
+      var btns = root.querySelectorAll('.tj-select-btn');
+      for (var i = 0; i < btns.length; i++) if (btns[i].getAttribute(TJ_SEL) === '1') n++;
+    }
+    var txt = '已选择' + n + '个文件';
+    /* 仅在文本变化时写入：本函数由 MutationObserver 驱动，无条件赋值会替换
+       文本节点并再次触发 observer，造成无限循环卡死主线程 */
+    if (box.textContent !== txt) box.textContent = txt;
+  }
+  function tjSelectButton(item) {
+    var bc = item && item.querySelector('.button-container');
+    if (!bc || bc.querySelector('.tj-select-btn')) return;
+    var ref = bc.querySelector('.action-btn');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tj-select-btn';
+    btn.setAttribute(TJ_SEL, '0');
+    btn.setAttribute('aria-pressed', 'false');
+    if (ref && ref.getAttribute('style')) btn.setAttribute('style', ref.getAttribute('style'));
+    btn.innerHTML = '<span class="tj-check-circle"></span><span class="tj-select-label">选择</span>';
+    bc.appendChild(btn);
+  }
+  function tjSyncUnpack() {
+    var root = document.getElementById('unpackResult');
+    if (!root) return;
+    /* 标记最外层灰色圆角容器，供 CSS 锁定其原样，避免选中态波及 */
+    var sec = root.parentElement;
+    while (sec && sec !== document.body && !(sec.classList && sec.classList.contains('result-section')))
+      sec = sec.parentElement;
+    if (sec && sec.classList && !sec.classList.contains('tj-unpack-section'))
+      sec.classList.add('tj-unpack-section');
+    tjBulkButtons(root.querySelector('.progress-info'));
+    var items = root.querySelectorAll('.decrypted-file-item');
+    for (var i = 0; i < items.length; i++) tjSelectButton(items[i]);
+    tjUpdateCount();   /* 结果生成 / 清空后同步提示框数量 */
+  }
+
+  document.addEventListener('click', function (e) {
+    var bulk = tjClosest(e.target, 'tj-bulk-btn');
+    if (bulk) {
+      var root = document.getElementById('unpackResult');
+      if (!root) return;
+      var items = root.querySelectorAll('.decrypted-file-item');
+      var isAll = bulk.getAttribute('data-tj-act') === 'all';
+      for (var i = 0; i < items.length; i++) {
+        var btn = items[i].querySelector('.tj-select-btn');
+        if (!btn) continue;
+        var cur = btn.getAttribute(TJ_SEL) === '1';
+        tjSetSelected(btn, isAll ? true : !cur);
+      }
+      /* 立即失焦：避免 :focus-within / 浏览器焦点环 / 触屏点击高亮波及外层灰色卡片 */
+      try { bulk.blur(); } catch (err) {}
+      tjUpdateCount();
+      return;
+    }
+    var sel = tjClosest(e.target, 'tj-select-btn');
+    if (sel) {
+      tjSetSelected(sel, sel.getAttribute(TJ_SEL) !== '1');
+      try { sel.blur(); } catch (err) {}
+      tjUpdateCount();
+    }
+  }, false);
+
+  /* 只读接口：供后续版本做批量下载，本次不改动下载逻辑 */
+  window.TujiaUnpack = {
+    getSelected: function () {
+      var root = document.getElementById('unpackResult');
+      if (!root) return [];
+      var out = [], items = root.querySelectorAll('.decrypted-file-item');
+      for (var i = 0; i < items.length; i++) {
+        var btn = items[i].querySelector('.tj-select-btn');
+        if (!btn || btn.getAttribute(TJ_SEL) !== '1') continue;
+        var a = items[i].querySelector('.button-container a[download]');
+        var nm = items[i].querySelector('.file-name');
+        out.push({
+          name: a ? a.getAttribute('download') : (nm ? nm.textContent : ''),
+          href: a ? a.getAttribute('href') : ''
+        });
+      }
+      return out;
+    }
+  };
+
+  function initUnpackMulti() {
+    var target = document.getElementById('unpackResult') || document.body;
+    if (!target) return;
+    new MutationObserver(function () { tjSyncUnpack(); })
+      .observe(target, { childList: true, subtree: true });
+    tjSyncUnpack();
+  }
+
   /* ========== 启动 ========== */
   function boot() {
     bootAnnouncement();
     renderRecent();
+    initUnpackMulti();
     setTimeout(ensurePngDefault, 800);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, false);

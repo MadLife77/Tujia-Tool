@@ -1,6 +1,6 @@
 # 图夹工具 Windows 桌面端源码（C 语言）
 
-> 作者水印：GitHub作者MadLife77 ｜ 版本：v2.4.2
+> 作者水印：GitHub作者MadLife77 ｜ 版本：v2.4.3
 
 桌面端使用 **C + Win32 API + WebView2 COM 接口** 编写，不含任何第三方 GUI 框架。
 

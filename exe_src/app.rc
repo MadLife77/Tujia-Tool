@@ -1,4 +1,4 @@
-/* 作者水印: GitHub作者MadLife77 — 图夹工具 v2.4.2 资源脚本 */
+/* 作者水印: GitHub作者MadLife77 — 图夹工具 v2.4.3 资源脚本 */
 1 ICON "app.ico"
 100 RCDATA "WebView2Loader.dll"
 102 RCDATA "app.html"
@@ -18,9 +18,9 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "MadLife77"
       VALUE "FileDescription", "Tujia Tool"
-      VALUE "FileVersion", "2.4.2"
+      VALUE "FileVersion", "2.4.3"
       VALUE "ProductName", "Tujia Tool"
-      VALUE "ProductVersion", "2.4.2"
+      VALUE "ProductVersion", "2.4.3"
     END
   END
   BLOCK "VarFileInfo"
