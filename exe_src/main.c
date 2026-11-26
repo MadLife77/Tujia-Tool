@@ -1,4 +1,4 @@
-/* 作者水印: GitHub作者MadLife77 — 图夹工具 v2.4.3 桌面端主程序
+/* 作者水印: GitHub作者MadLife77 — 图夹工具 v2.4.4 桌面端主程序
  * 设计语言: C (Win32 API + WebView2 COM 接口)
  * 加载内嵌单文件页面 app.html（file:// 直读），资源由 app.rc 编入 PE。
  * 软件由 Github作者 MadLife77 整合生成 */

@@ -2577,6 +2577,20 @@ const _0x481c91=_0x3219;(function(_0x1023be,_0x29f214){const _0x461eaf=_0x3219,_
   outline: none !important;
   -webkit-tap-highlight-color: transparent;
 }
+/* 拖放解析提示层（作者水印: GitHub作者MadLife77） */
+.tj-drop-overlay { position: fixed; inset: 0; z-index: 2147483000; display: none;
+  align-items: center; justify-content: center; background: rgba(94,114,228,.12);
+  backdrop-filter: blur(3px); pointer-events: none; }
+.tj-drop-overlay.show { display: flex !important; }
+.tj-drop-box { width: min(86vw, 420px); padding: 36px 24px; text-align: center;
+  border: 3px dashed var(--primary); border-radius: 18px; background: #fff;
+  box-shadow: 0 12px 40px rgba(94,114,228,.22); }
+.tj-drop-icon { font-size: 2.4rem; line-height: 1; }
+.tj-drop-title { margin-top: 14px; font-size: 1.15rem; font-weight: 700; color: var(--primary); }
+.tj-drop-sub { margin-top: 8px; font-size: .85rem; color: var(--gray, #888); }
+.tj-notice { position: fixed; left: 50%; top: 24px; transform: translateX(-50%);
+  z-index: 2147483001; padding: 10px 18px; border-radius: 8px; background: rgba(40,44,60,.92);
+  color: #fff; font-size: .9rem; }
 </style>
 <script id="tj-ui-patch-js">
 /* 作者水印: GitHub作者MadLife77 — v2.4.3 功能补丁（三端通用）
@@ -2596,7 +2610,9 @@ const _0x481c91=_0x3219;(function(_0x1023be,_0x29f214){const _0x461eaf=_0x3219,_
  *    同步显示淡蓝底 + 向外扩散亮蓝边框/光晕，hover 时淡蓝加深；
  *    「反选」右侧提示框实时显示「已选择{number}个文件」；
  *    按钮组新增「下载」：批量下载已选文件（未选中时下载全部）。
- *    （本次仅 HTML 端发布，EXE / APK 端待下阶段同步） */
+ * 8) 大图包性能：postMessage 走 transfer、超大文件抽样 hash、阶段进度提示。
+ * 9) 拖放解析（仅 HTML / EXE）：拖入图夹/图包显示「用 Tu Jia Tool 打开」，
+ *    松开后复用现有 #localDecryptInput 解包链路，不重复实现解析与结果处理。 */
 (function () {
   'use strict';
   /* 桥对象按次动态取，避免 addJavascriptInterface 注入时序差异 */
@@ -3104,11 +3120,175 @@ const _0x481c91=_0x3219;(function(_0x1023be,_0x29f214){const _0x461eaf=_0x3219,_
     tjSyncUnpack();
   }
 
+  /* ========== 8. 大图包解包性能补丁（三端） ==========
+     ① 96MB ArrayBuffer 走 transfer，避免结构化克隆双份内存；
+     ② 超大文件改用抽样 hash（头尾各 64KB + 长度），跳过整包 SHA-256；
+     ④ digest / 传输阶段更新进度文案，消除"假死"观感。 */
+  function initPerfPatch() {
+    try {
+      var W = window.Worker;
+      if (W && W.prototype) {
+        var origPost = W.prototype.postMessage;
+        W.prototype.postMessage = function (message, transfer) {
+          try {
+            var p = message && message.payload;
+            if (p && p.encryptedData instanceof ArrayBuffer &&
+                p.encryptedData.byteLength > 8 * 1024 * 1024 &&
+                !(transfer && transfer.length)) {
+              var copy = p.encryptedData.slice(0);
+              var np = {};
+              for (var k in p) np[k] = p[k];
+              np.encryptedData = copy;
+              setUnpackStage('正在传输图包数据…', 35);
+              return origPost.call(this, { taskId: message.taskId, action: message.action, payload: np }, [copy]);
+            }
+          } catch (e) {}
+          return origPost.apply(this, arguments);
+        };
+      }
+    } catch (e) {}
+
+    try {
+      var origHash = window.calculateFileHash;
+      if (typeof origHash === 'function' && !origHash.__tjPatched) {
+        var patched = function (buf) {
+          if (buf && buf.byteLength > 64 * 1024 * 1024) {
+            try {
+              var head = new Uint8Array(buf, 0, 65536);
+              var tail = new Uint8Array(buf, buf.byteLength - 65536, 65536);
+              var sample = new Uint8Array(8 + head.length + tail.length);
+              new DataView(sample.buffer).setUint32(0, buf.byteLength, true);
+              sample.set(head, 8);
+              sample.set(tail, 8 + head.length);
+              return crypto.subtle.digest('SHA-256', sample).then(function (d) {
+                var out = [], b = new Uint8Array(d);
+                for (var i = 0; i < b.length; i++) out.push(('0' + b[i].toString(16)).slice(-2));
+                return out.join('');
+              });
+            } catch (e) {}
+          }
+          return origHash(buf);
+        };
+        patched.__tjPatched = true;
+        window.calculateFileHash = patched;
+      }
+    } catch (e) {}
+
+    try {
+      var origDigest = crypto.subtle.digest.bind(crypto.subtle);
+      crypto.subtle.digest = function (alg, data) {
+        if (data && data.byteLength > 8 * 1024 * 1024) setUnpackStage('正在校验文件…', 12);
+        return origDigest(alg, data).then(function (r) {
+          setUnpackStage('正在解析图包…', 30);
+          return r;
+        });
+      };
+    } catch (e) {}
+  }
+  function setUnpackStage(text, pct) {
+    try {
+      var c = document.getElementById('unpackResult_progressContainer');
+      if (!c || c.style.display === 'none') return;
+      var t = c.querySelector('.loading-text');
+      if (t) t.textContent = text;
+      var f = document.getElementById('unpackResult_progressFill');
+      if (f && pct != null) f.style.width = pct + '%';
+    } catch (e) {}
+  }
+
+  /* ========== 9. 拖放解析（仅 HTML / EXE） ==========
+     只做"校验文件类型 + 喂给现有解包入口"，解析与结果处理完全复用原代码。 */
+  function initDragDrop() {
+    if (isApkEnv()) return;
+    var overlay = null, depth = 0;
+    function ensureOverlay() {
+      if (overlay) return overlay;
+      overlay = document.createElement('div');
+      overlay.className = 'tj-drop-overlay';
+      overlay.innerHTML = '<div class="tj-drop-box">' +
+        '<div class="tj-drop-icon">📂</div>' +
+        '<div class="tj-drop-title">用 Tu Jia Tool 打开</div>' +
+        '<div class="tj-drop-sub">松开鼠标，自动解析图夹 / 图包</div></div>';
+      document.body.appendChild(overlay);
+      return overlay;
+    }
+    function hasFiles(e) {
+      try {
+        return !!(e.dataTransfer && e.dataTransfer.types &&
+          Array.prototype.indexOf.call(e.dataTransfer.types, 'Files') >= 0);
+      } catch (err) { return false; }
+    }
+    document.addEventListener('dragenter', function (e) {
+      if (!hasFiles(e)) return;
+      e.preventDefault(); depth++;
+      ensureOverlay().classList.add('show');
+    }, true);
+    document.addEventListener('dragover', function (e) {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = 'copy'; } catch (err) {}
+      ensureOverlay().classList.add('show');
+    }, true);
+    document.addEventListener('dragleave', function (e) {
+      if (!hasFiles(e)) return;
+      depth--;
+      if (depth <= 0) { depth = 0; if (overlay) overlay.classList.remove('show'); }
+    }, true);
+    document.addEventListener('drop', function (e) {
+      if (!hasFiles(e)) return;
+      e.preventDefault(); depth = 0;
+      if (overlay) overlay.classList.remove('show');
+      var f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (!f) return;
+      var ext = (f.name || '').split('.').pop().toLowerCase();
+      if (!/^(png|gif|jpg|jpeg|webp|bmp)$/.test(ext) && !/^image\//.test(f.type || '')) {
+        tjNotice('请选择有效的图夹或图包图片（PNG / GIF）');
+        return;
+      }
+      var input = document.getElementById('localDecryptInput');
+      if (!input) { tjNotice('未找到解包入口，请手动选择文件'); return; }
+      try {
+        var dt = new DataTransfer();
+        dt.items.add(f);
+        input.files = dt.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      } catch (err) { tjNotice('拖放解析失败：' + err.message); return; }
+      try {
+        var cards = document.querySelectorAll('.collapsible-card');
+        for (var i = 0; i < cards.length; i++) {
+          if (/图片解包/.test(cards[i].textContent || '')) {
+            if (cards[i].classList.contains('collapsed')) {
+              var tg = cards[i].querySelector('.collapsible-toggle');
+              if (tg) tg.click();
+            }
+            setTimeout(function (c) { c.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120, cards[i]);
+            break;
+          }
+        }
+      } catch (err) {}
+    }, true);
+  }
+  function tjNotice(msg) {
+    try {
+      if (typeof noty === 'function') {
+        noty({ text: msg, type: 'warning', timeout: 3000, layout: 'topCenter' });
+        return;
+      }
+    } catch (e) {}
+    var el = document.createElement('div');
+    el.className = 'tj-notice';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(function () { try { el.parentNode.removeChild(el); } catch (e) {} }, 3000);
+  }
+
   /* ========== 启动 ========== */
   function boot() {
     bootAnnouncement();
     renderRecent();
     initUnpackMulti();
+    initPerfPatch();
+    initDragDrop();
     setTimeout(ensurePngDefault, 800);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, false);
@@ -3374,7 +3554,7 @@ const _0x481c91=_0x3219;(function(_0x1023be,_0x29f214){const _0x461eaf=_0x3219,_
                 <p style="font-weight: 600; margin-bottom: 10px;">📹 教学视频位于“使用须知”</p>
             </div>
             <p style="font-size: 0.9em; color: #666; margin-top: 20px; padding-top: 15px; border-top: 1px dashed #eee;">
-                公告版本：v2.4.3<br>
+                公告版本：v2.4.4<br>
                 <span style="color:#999;">软件由Github作者MadLife77 整合生成</span>
             </p>
         </div>
