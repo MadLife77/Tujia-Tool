@@ -2084,7 +2084,7 @@ footer {
   border-radius: 6px; border: 1px solid var(--primary);
   background: #fff; color: var(--primary); cursor: pointer; white-space: nowrap; }
 .tj-bulk-btn:hover { background: #f2f7ff; color: var(--primary); }
-.tj-sel-count { padding: 3px 10px; font-size: 0.8rem; line-height: 1.4;
+.tj-sel-count { margin-left: 12px; padding: 3px 10px; font-size: 0.8rem; line-height: 1.4;
   border-radius: 6px; border: 1px solid var(--border);
   background: #fff; color: var(--text-secondary, #5b677d); white-space: nowrap; }
 #unpackResult .button-container { flex-wrap: nowrap !important; }

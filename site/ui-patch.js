@@ -13,7 +13,8 @@
  *    操作区由「下载 / 预览」两等分改为「下载 / 预览 / 选择」三等分，第三格为
  *    圆形多选按钮；选中后圆形变浅绿底白色对勾，选择按钮与整张灰色圆角卡片
  *    同步显示淡蓝底 + 向外扩散亮蓝边框/光晕，hover 时淡蓝加深；
- *    「反选」右侧提示框实时显示「已选择{number}个文件」。
+ *    「反选」右侧提示框实时显示「已选择{number}个文件」；
+ *    按钮组新增「下载」：批量下载已选文件（未选中时下载全部）。
  *    （本次仅 HTML 端发布，EXE / APK 端待下阶段同步） */
 (function () {
   'use strict';
@@ -392,10 +393,34 @@
     bar.className = 'tj-bulk-bar';
     bar.innerHTML = '<button type="button" class="tj-bulk-btn" data-tj-act="all">全选</button>' +
                     '<button type="button" class="tj-bulk-btn" data-tj-act="invert">反选</button>' +
+                    '<button type="button" class="tj-bulk-btn" data-tj-act="download">下载</button>' +
                     '<span class="tj-sel-count" id="tjSelectedCount">已选择0个文件</span>';
     var t = info.querySelector('.loading-text');
     if (t && t.nextSibling) info.insertBefore(bar, t.nextSibling);
     else info.appendChild(bar);
+  }
+  function tjDownloadSelected() {
+    var root = document.getElementById('unpackResult');
+    if (!root) return;
+    var items = root.querySelectorAll('.decrypted-file-item');
+    var i, btn, a, n = 0, links = [];
+    /* 第一轮统计选中数：有选中只下选中项，一项未选则下全部 */
+    for (i = 0; i < items.length; i++) {
+      btn = items[i].querySelector('.tj-select-btn');
+      if (btn && btn.getAttribute(TJ_SEL) === '1') n++;
+    }
+    for (i = 0; i < items.length; i++) {
+      btn = items[i].querySelector('.tj-select-btn');
+      a = items[i].querySelector('.button-container a[download]');
+      if (!a) continue;
+      if (n === 0 || (btn && btn.getAttribute(TJ_SEL) === '1')) links.push(a);
+    }
+    /* 错开触发，避免浏览器 / 原生桥并发处理多个 blob 下载时互相覆盖 */
+    for (i = 0; i < links.length; i++) {
+      (function (link, delay) {
+        setTimeout(function () { try { link.click(); } catch (e) {} }, delay);
+      })(links[i], i * 320);
+    }
   }
   function tjUpdateCount() {
     var root = document.getElementById('unpackResult');
@@ -444,6 +469,11 @@
     if (bulk) {
       var root = document.getElementById('unpackResult');
       if (!root) return;
+      if (bulk.getAttribute('data-tj-act') === 'download') {
+        tjDownloadSelected();
+        try { bulk.blur(); } catch (err) {}
+        return;
+      }
       var items = root.querySelectorAll('.decrypted-file-item');
       var isAll = bulk.getAttribute('data-tj-act') === 'all';
       for (var i = 0; i < items.length; i++) {
